@@ -690,5 +690,13 @@
   "compactNotificationButtons": "Botones de notificación compactos",
   "@compactNotificationButtons": {},
   "compactNotificationButtonsSub": "Botones para mostrar en la vista compacta de notificaciones",
-  "@compactNotificationButtonsSub": {}
+  "@compactNotificationButtonsSub": {},
+  "compactNotificationButtonsHeader": "Puedes elegir hasta 3 botones",
+  "@compactNotificationButtonsHeader": {},
+  "blacklistHomeSectionsConfirm": "¿Estás seguro de que quieres poner esta sección en la lista negra? Una vez en la lista negra, no se mostrará en la pantalla de inicio",
+  "@blacklistHomeSectionsConfirm": {},
+  "blacklistHomeSections": "Poner en la lista negra esta sección",
+  "@blacklistHomeSections": {},
+  "folders": "Carpetas",
+  "@folders": {}
 }

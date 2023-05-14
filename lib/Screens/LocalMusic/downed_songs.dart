@@ -17,6 +17,8 @@
  * Copyright (c) 2021-2022, Ankit Sangwan
  */
 
+import 'dart:io';
+
 import 'package:blackhole/CustomWidgets/add_playlist.dart';
 import 'package:blackhole/CustomWidgets/custom_physics.dart';
 import 'package:blackhole/CustomWidgets/data_search.dart';
@@ -59,10 +61,12 @@ class _DownloadedSongsState extends State<DownloadedSongs>
   final Map<String, List<SongModel>> _albums = {};
   final Map<String, List<SongModel>> _artists = {};
   final Map<String, List<SongModel>> _genres = {};
+  final Map<String, List<SongModel>> _folders = {};
 
   final List<String> _sortedAlbumKeysList = [];
   final List<String> _sortedArtistKeysList = [];
   final List<String> _sortedGenreKeysList = [];
+  final List<String> _sortedFolderKeysList = [];
   // final List<String> _videos = [];
 
   bool added = false;
@@ -100,7 +104,7 @@ class _DownloadedSongsState extends State<DownloadedSongs>
   @override
   void initState() {
     _tcontroller =
-        TabController(length: widget.showPlaylists ? 5 : 4, vsync: this);
+        TabController(length: widget.showPlaylists ? 6 : 5, vsync: this);
     getData();
     super.initState();
   }
@@ -123,8 +127,10 @@ class _DownloadedSongsState extends State<DownloadedSongs>
       Logger.root.info('Requesting permission to access local songs');
       await offlineAudioQuery.requestPermission();
       tempPath ??= (await getTemporaryDirectory()).path;
-      Logger.root.info('Getting local playlists');
-      playlistDetails = await offlineAudioQuery.getPlaylists();
+      if (Platform.isAndroid) {
+        Logger.root.info('Getting local playlists');
+        playlistDetails = await offlineAudioQuery.getPlaylists();
+      }
       if (widget.cachedSongs == null) {
         Logger.root.info('Cache empty, calling audioQuery');
         final receivedSongs = await offlineAudioQuery.getSongs(
@@ -172,11 +178,22 @@ class _DownloadedSongsState extends State<DownloadedSongs>
             _genres[_songs[i].genre ?? 'Unknown'] = [_songs[i]];
             _sortedGenreKeysList.add(_songs[i].genre ?? 'Unknown');
           }
+
+          final tempPath = _songs[i].data.split('/');
+          tempPath.removeLast();
+          final dirPath = tempPath.join('/');
+
+          if (_folders.containsKey(dirPath)) {
+            _folders[dirPath]!.add(_songs[i]);
+          } else {
+            _folders[dirPath] = [_songs[i]];
+            _sortedFolderKeysList.add(dirPath);
+          }
         } catch (e) {
           Logger.root.severe('Error in sorting songs', e);
         }
       }
-      Logger.root.info('albums and artists set');
+      Logger.root.info('albums, artists, genre & folders set');
     } catch (e) {
       Logger.root.severe('Error in getData', e);
       added = true;
@@ -236,7 +253,7 @@ class _DownloadedSongsState extends State<DownloadedSongs>
         children: [
           Expanded(
             child: DefaultTabController(
-              length: widget.showPlaylists ? 5 : 4,
+              length: widget.showPlaylists ? 6 : 5,
               child: Scaffold(
                 backgroundColor: Colors.transparent,
                 appBar: AppBar(
@@ -259,6 +276,9 @@ class _DownloadedSongsState extends State<DownloadedSongs>
                       ),
                       Tab(
                         text: AppLocalizations.of(context)!.genres,
+                      ),
+                      Tab(
+                        text: AppLocalizations.of(context)!.folders,
                       ),
                       if (widget.showPlaylists)
                         Tab(
@@ -411,6 +431,11 @@ class _DownloadedSongsState extends State<DownloadedSongs>
                           AlbumsTab(
                             albums: _genres,
                             albumsList: _sortedGenreKeysList,
+                            tempPath: tempPath!,
+                          ),
+                          AlbumsTab(
+                            albums: _folders,
+                            albumsList: _sortedFolderKeysList,
                             tempPath: tempPath!,
                           ),
                           if (widget.showPlaylists)
