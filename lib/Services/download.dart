@@ -322,6 +322,8 @@ class Download with ChangeNotifier {
       appPath = Hive.box('settings').get('tempDirPath')?.toString();
       appPath ??= (await getTemporaryDirectory()).path;
     } else {
+      // final Directory? temp = await getExternalStorageDirectory();
+
       final Directory? temp = await getDownloadsDirectory();
       appPath = temp!.path;
     }
