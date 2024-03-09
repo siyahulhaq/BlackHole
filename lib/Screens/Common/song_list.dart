@@ -103,6 +103,7 @@ class _SongsListPageState extends State<SongsListPage> {
               );
             }
           });
+          break;
         case 'album':
           SaavnAPI()
               .fetchAlbumSongs(widget.listItem['id'].toString())
@@ -120,6 +121,7 @@ class _SongsListPageState extends State<SongsListPage> {
               );
             }
           });
+          break;
         case 'playlist':
           SaavnAPI()
               .fetchPlaylistSongs(widget.listItem['id'].toString())
@@ -137,6 +139,7 @@ class _SongsListPageState extends State<SongsListPage> {
               );
             }
           });
+          break;
         case 'mix':
           SaavnAPI()
               .getSongFromToken(
@@ -158,6 +161,7 @@ class _SongsListPageState extends State<SongsListPage> {
               );
             }
           });
+          break;
         case 'show':
           SaavnAPI()
               .getSongFromToken(
@@ -179,6 +183,7 @@ class _SongsListPageState extends State<SongsListPage> {
               );
             }
           });
+          break;
         default:
           setState(() {
             fetched = true;

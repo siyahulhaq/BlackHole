@@ -50,30 +50,35 @@ class ImportPlaylist extends StatelessWidget {
           playlistNames,
           settingsBox,
         );
+        break;
       case 'spotify':
         connectToSpotify(
           context,
           playlistNames,
           settingsBox,
         );
+        break;
       case 'youtube':
         importYt(
           context,
           playlistNames,
           settingsBox,
         );
+        break;
       case 'jiosaavn':
         importJioSaavn(
           context,
           playlistNames,
           settingsBox,
         );
+        break;
       case 'resso':
         importResso(
           context,
           playlistNames,
           settingsBox,
         );
+        break;
       default:
         break;
     }

@@ -973,8 +973,10 @@ class AudioPlayerHandlerImpl extends BaseAudioHandler
     switch (button) {
       case MediaButton.media:
         _handleMediaActionPressed();
+        return;
       case MediaButton.next:
         await skipToNext();
+        return;
       case MediaButton.previous:
         await skipToPrevious();
     }
@@ -995,10 +997,13 @@ class AudioPlayerHandlerImpl extends BaseAudioHandler
             } else {
               play();
             }
+            return;
           case 2:
             skipToNext();
+            return;
           case 3:
             skipToPrevious();
+            return;
           default:
             break;
         }

@@ -293,11 +293,11 @@ class PlayerInvoke {
     if (enforceRepeat) {
       switch (repeatMode) {
         case 'None':
-          audioHandler.setRepeatMode(AudioServiceRepeatMode.none);
+          return audioHandler.setRepeatMode(AudioServiceRepeatMode.none);
         case 'All':
-          audioHandler.setRepeatMode(AudioServiceRepeatMode.all);
+          return audioHandler.setRepeatMode(AudioServiceRepeatMode.all);
         case 'One':
-          audioHandler.setRepeatMode(AudioServiceRepeatMode.one);
+          return audioHandler.setRepeatMode(AudioServiceRepeatMode.one);
         default:
           break;
       }

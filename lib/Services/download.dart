@@ -157,12 +157,14 @@ class Download with ChangeNotifier {
         switch (rememberOption) {
           case 0:
             lastDownloadId = data['id'].toString();
+            return;
           case 1:
-            downloadSong(context, dlPath, filename, data);
+            return downloadSong(context, dlPath, filename, data);
           case 2:
             while (await File('$dlPath/$filename').exists()) {
               filename = filename.replaceAll('.m4a', ' (1).m4a');
             }
+            return;
           default:
             lastDownloadId = data['id'].toString();
             break;
