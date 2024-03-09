@@ -211,7 +211,6 @@ class _LikedSongsState extends State<LikedSongs>
             return 0;
           }
         });
-        break;
       case 0:
         _songs.sort(
           (a, b) => a['title']
@@ -219,7 +218,6 @@ class _LikedSongsState extends State<LikedSongs>
               .toUpperCase()
               .compareTo(b['title'].toString().toUpperCase()),
         );
-        break;
       case 1:
         _songs.sort(
           (a, b) => a['dateAdded']
@@ -227,7 +225,6 @@ class _LikedSongsState extends State<LikedSongs>
               .toUpperCase()
               .compareTo(b['dateAdded'].toString().toUpperCase()),
         );
-        break;
       case 2:
         _songs.sort(
           (a, b) => a['album']
@@ -235,7 +232,6 @@ class _LikedSongsState extends State<LikedSongs>
               .toUpperCase()
               .compareTo(b['album'].toString().toUpperCase()),
         );
-        break;
       case 3:
         _songs.sort(
           (a, b) => a['artist']
@@ -243,7 +239,6 @@ class _LikedSongsState extends State<LikedSongs>
               .toUpperCase()
               .compareTo(b['artist'].toString().toUpperCase()),
         );
-        break;
       case 4:
         _songs.sort(
           (a, b) => a['duration']
@@ -251,7 +246,6 @@ class _LikedSongsState extends State<LikedSongs>
               .toUpperCase()
               .compareTo(b['duration'].toString().toUpperCase()),
         );
-        break;
       default:
         _songs.sort(
           (b, a) => a['dateAdded']
@@ -410,7 +404,13 @@ class _LikedSongsState extends State<LikedSongs>
                       onPressed: () {
                         showSearch(
                           context: context,
-                          delegate: DownloadsSearch(data: _songs),
+                          delegate: DownloadsSearch(
+                            data: _songs,
+                            onDelete: (Map item) {
+                              deleteLiked(item);
+                              Navigator.of(context).pop();
+                            },
+                          ),
                         );
                       },
                     ),
@@ -785,7 +785,9 @@ class _SongsTabState extends State<SongsTab>
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            '${widget.songs[index]['artist'] ?? 'Unknown'} - ${widget.songs[index]['album'] ?? 'Unknown'}',
+                            (widget.songs[index]['album'] ?? '') == ''
+                                ? '${widget.songs[index]['artist'] ?? 'Unknown'}'
+                                : '${widget.songs[index]['artist'] ?? 'Unknown'} - ${widget.songs[index]['album']}',
                             overflow: TextOverflow.ellipsis,
                           ),
                           trailing: Row(

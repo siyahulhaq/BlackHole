@@ -21,10 +21,11 @@ import 'package:audio_service/audio_service.dart';
 import 'package:blackhole/CustomWidgets/add_playlist.dart';
 import 'package:blackhole/Helpers/add_mediaitem_to_queue.dart';
 import 'package:blackhole/Helpers/mediaitem_converter.dart';
+import 'package:blackhole/Helpers/radio.dart';
 import 'package:blackhole/Screens/Common/song_list.dart';
 import 'package:blackhole/Screens/Search/albums.dart';
 import 'package:blackhole/Screens/Search/search.dart';
-import 'package:blackhole/Services/youtube_services.dart';
+import 'package:blackhole/Services/yt_music.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -156,6 +157,19 @@ class _SongTileTrailingMenuState extends State<SongTileTrailingMenu> {
                 ),
               ),
         PopupMenuItem(
+          value: 7,
+          child: Row(
+            children: [
+              Icon(
+                Icons.podcasts_rounded,
+                color: Theme.of(context).iconTheme.color,
+              ),
+              const SizedBox(width: 10.0),
+              Text(AppLocalizations.of(context)!.playRadio),
+            ],
+          ),
+        ),
+        PopupMenuItem(
           value: 3,
           child: Row(
             children: [
@@ -173,7 +187,6 @@ class _SongTileTrailingMenuState extends State<SongTileTrailingMenu> {
         switch (value) {
           case 3:
             Share.share(widget.data['perma_url'].toString());
-            break;
 
           case 4:
             Navigator.push(
@@ -190,19 +203,16 @@ class _SongTileTrailingMenuState extends State<SongTileTrailingMenu> {
                 ),
               ),
             );
-            break;
           case 6:
             widget.deleteLiked!(widget.data);
-            break;
+          case 7:
+            createRadioItems(stationNames: [mediaItem.id]);
           case 0:
             AddToPlaylist().addToPlaylist(context, mediaItem);
-            break;
           case 1:
             addToNowPlaying(context: context, mediaItem: mediaItem);
-            break;
           case 2:
             playNext(mediaItem, context);
-            break;
           default:
             Navigator.push(
               context,
@@ -342,14 +352,14 @@ class _YtSongTileTrailingMenuState extends State<YtSongTileTrailingMenu> {
           );
         }
         if (value == 1 || value == 2 || value == 3) {
-          YouTubeServices()
-              .formatVideoFromId(
-            id: widget.data['id'].toString(),
+          YtMusicService()
+              .getSongData(
+            videoId: widget.data['id'].toString(),
             data: widget.data,
           )
               .then((songMap) {
             final MediaItem mediaItem =
-                MediaItemConverter.mapToMediaItem(songMap!);
+                MediaItemConverter.mapToMediaItem(songMap);
             if (value == 1) {
               playNext(mediaItem, context);
             }

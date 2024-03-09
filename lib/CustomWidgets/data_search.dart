@@ -107,10 +107,10 @@ class DataSearch extends SearchDelegate {
               : suggestionList[index].artist!,
           overflow: TextOverflow.ellipsis,
         ),
-        onTap: () async {
+        onTap: () {
           PlayerInvoke.init(
-            songsList: suggestionList,
-            index: index,
+            songsList: data,
+            index: data.indexOf(suggestionList[index]),
             isOffline: true,
             recommend: false,
           );
@@ -160,10 +160,10 @@ class DataSearch extends SearchDelegate {
               : suggestionList[index].artist!,
           overflow: TextOverflow.ellipsis,
         ),
-        onTap: () async {
+        onTap: () {
           PlayerInvoke.init(
-            songsList: suggestionList,
-            index: index,
+            songsList: data,
+            index: data.indexOf(suggestionList[index]),
             isOffline: true,
             recommend: false,
           );
@@ -194,8 +194,13 @@ class DataSearch extends SearchDelegate {
 class DownloadsSearch extends SearchDelegate {
   final bool isDowns;
   final List data;
+  final Function(Map)? onDelete;
 
-  DownloadsSearch({required this.data, this.isDowns = false});
+  DownloadsSearch({
+    required this.data,
+    this.isDowns = false,
+    this.onDelete,
+  });
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -283,13 +288,14 @@ class DownloadsSearch extends SearchDelegate {
                   SongTileTrailingMenu(
                     data: suggestionList[index] as Map,
                     isPlaylist: true,
+                    deleteLiked: onDelete,
                   ),
                 ],
               ),
         onTap: () {
           PlayerInvoke.init(
-            songsList: suggestionList,
-            index: index,
+            songsList: data,
+            index: data.indexOf(suggestionList[index]),
             isOffline: isDowns,
             fromDownloads: isDowns,
             recommend: false,
@@ -342,8 +348,8 @@ class DownloadsSearch extends SearchDelegate {
         ),
         onTap: () {
           PlayerInvoke.init(
-            songsList: suggestionList,
-            index: index,
+            songsList: data,
+            index: data.indexOf(suggestionList[index]),
             isOffline: isDowns,
             fromDownloads: isDowns,
             recommend: false,
@@ -368,6 +374,7 @@ class DownloadsSearch extends SearchDelegate {
       ),
       inputDecorationTheme:
           const InputDecorationTheme(focusedBorder: InputBorder.none),
+      scaffoldBackgroundColor: Colors.transparent,
     );
   }
 }

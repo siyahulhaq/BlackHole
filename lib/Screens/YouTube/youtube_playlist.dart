@@ -17,6 +17,8 @@
  * Copyright (c) 2021-2023, Ankit Sangwan
  */
 
+import 'dart:async';
+
 import 'package:blackhole/CustomWidgets/bouncy_playlist_header_scroll_view.dart';
 import 'package:blackhole/CustomWidgets/copy_clipboard.dart';
 import 'package:blackhole/CustomWidgets/gradient_containers.dart';
@@ -29,6 +31,7 @@ import 'package:blackhole/Services/yt_music.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:logging/logging.dart';
+import 'package:share_plus/share_plus.dart';
 
 class YouTubePlaylist extends StatefulWidget {
   final String playlistId;
@@ -61,6 +64,8 @@ class _YouTubePlaylistState extends State<YouTubePlaylist> {
   String playlistSubtitle = '';
   String? playlistSecondarySubtitle;
   String playlistImage = '';
+
+  bool isSharePopupShown = false;
 
   @override
   void initState() {
@@ -115,7 +120,7 @@ class _YouTubePlaylistState extends State<YouTubePlaylist> {
           });
         });
       }
-      // YouTubeServices().getPlaylistSongs(widget.playlistId).then((value) {
+      // YouTubeServices.instance.getPlaylistSongs(widget.playlistId).then((value) {
       //   if (value.isNotEmpty) {
       //     setState(() {
       //       searchedList = value;
@@ -155,6 +160,23 @@ class _YouTubePlaylistState extends State<YouTubePlaylist> {
                 secondarySubtitle: playlistSecondarySubtitle,
                 imageUrl: playlistImage,
                 actions: [
+                  IconButton(
+                    icon: const Icon(Icons.share_rounded),
+                    tooltip: AppLocalizations.of(context)!.share,
+                    onPressed: () {
+                      if (!isSharePopupShown) {
+                        isSharePopupShown = true;
+
+                        Share.share(
+                          'https://youtube.com/playlist?list=${widget.playlistId}',
+                        ).whenComplete(() {
+                          Timer(const Duration(milliseconds: 500), () {
+                            isSharePopupShown = false;
+                          });
+                        });
+                      }
+                    },
+                  ),
                   PlaylistPopupMenu(
                     data: searchedList,
                     title: playlistName,
@@ -166,7 +188,7 @@ class _YouTubePlaylistState extends State<YouTubePlaylist> {
                   });
 
                   final Map? response =
-                      await YouTubeServices().formatVideoFromId(
+                      await YouTubeServices.instance.formatVideoFromId(
                     id: searchedList.first['id'].toString(),
                     data: searchedList.first,
                   );
@@ -189,7 +211,7 @@ class _YouTubePlaylistState extends State<YouTubePlaylist> {
                   final List<Map> playList = List.from(searchedList);
                   playList.shuffle();
                   final Map? response =
-                      await YouTubeServices().formatVideoFromId(
+                      await YouTubeServices.instance.formatVideoFromId(
                     id: playList.first['id'].toString(),
                     data: playList.first,
                   );
@@ -258,8 +280,9 @@ class _YouTubePlaylistState extends State<YouTubePlaylist> {
                                 setState(() {
                                   done = false;
                                 });
-                                final Map? response =
-                                    await YouTubeServices().formatVideoFromId(
+                                final Map? response = await YouTubeServices
+                                    .instance
+                                    .formatVideoFromId(
                                   id: entry['id'].toString(),
                                   data: entry,
                                 );
@@ -274,7 +297,7 @@ class _YouTubePlaylistState extends State<YouTubePlaylist> {
                                 // for (var i = 0;
                                 //     i < searchedList.length;
                                 //     i++) {
-                                //   YouTubeServices()
+                                //   YouTubeServices.instance
                                 //       .formatVideo(
                                 //     video: searchedList[i],
                                 //     quality: Hive.box('settings')

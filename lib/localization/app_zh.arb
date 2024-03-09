@@ -71,7 +71,7 @@
   "@remove": {},
   "removed": "已移除",
   "@removed": {},
-  "restoreSub": "从备份文件中恢复数据\n您需要在恢复成功后重启应用\n",
+  "restoreSub": "从备份文件中恢复数据。",
   "@restoreSub": {},
   "like": "收藏",
   "@like": {},
@@ -433,7 +433,7 @@
   "@connectingRadio": {},
   "contactUs": "联系我们",
   "@contactUs": {},
-  "contactUsSub": "感谢您反馈问题或提出建议！",
+  "contactUsSub": "感谢反馈！",
   "@contactUsSub": {},
   "convertingSongs": "正在转换歌曲",
   "@convertingSongs": {},
@@ -720,5 +720,9 @@
   "navTabs": "导航栏选项卡",
   "@navTabs": {},
   "navTabsSub": "显示在底部导航栏的选项卡",
-  "@navTabsSub": {}
+  "@navTabsSub": {},
+  "restart": "你可能需要重启应用",
+  "@restart": {},
+  "restartRequired": "你需要重启应用",
+  "@restartRequired": {}
 }

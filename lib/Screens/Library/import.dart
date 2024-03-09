@@ -50,35 +50,30 @@ class ImportPlaylist extends StatelessWidget {
           playlistNames,
           settingsBox,
         );
-        break;
       case 'spotify':
         connectToSpotify(
           context,
           playlistNames,
           settingsBox,
         );
-        break;
       case 'youtube':
         importYt(
           context,
           playlistNames,
           settingsBox,
         );
-        break;
       case 'jiosaavn':
         importJioSaavn(
           context,
           playlistNames,
           settingsBox,
         );
-        break;
       case 'resso':
         importResso(
           context,
           playlistNames,
           settingsBox,
         );
-        break;
       default:
         break;
     }
@@ -138,7 +133,7 @@ class ImportPlaylist extends StatelessWidget {
                     'jiosaavn',
                     'resso',
                   ][index],
-                  context: cntxt,
+                  context: context,
                 );
               },
             );
@@ -223,7 +218,7 @@ Future<void> importYt(
       Navigator.pop(context);
       final Map data = await SearchAddPlaylist.addYtPlaylist(link);
       if (data.isNotEmpty) {
-        if (data['title'] == '' && data['count'] == 0) {
+        if (data['songs'] == null || data['songs'].length == 0) {
           Logger.root.severe(
             'Failed to import YT playlist. Data not empty but title or the count is empty.',
           );
@@ -233,22 +228,16 @@ Future<void> importYt(
             duration: const Duration(seconds: 3),
           );
         } else {
-          playlistNames.add(
-            data['title'] == '' ? 'Yt Playlist' : data['title'],
-          );
-          settingsBox.put(
-            'playlistNames',
-            playlistNames,
-          );
+          await addPlaylist(data['name'].toString(), data['songs'] as List);
 
-          await SearchAddPlaylist.showProgress(
-            data['count'] as int,
-            context,
-            SearchAddPlaylist.ytSongsAdder(
-              data['title'].toString(),
-              data['tracks'] as List,
-            ),
-          );
+          // await SearchAddPlaylist.showProgress(
+          //   (data['songs'] as List).length,
+          //   context,
+          //   SearchAddPlaylist.ytSongsAdder(
+          //     data['name'].toString(),
+          //     data['songs'] as List,
+          //   ),
+          // );
         }
       } else {
         Logger.root.severe(
@@ -324,7 +313,9 @@ Future<void> importSpotify(
     accessToken,
     playlistId,
   );
-  if (data.isNotEmpty) {
+  if (data.isNotEmpty &&
+      data['tracks'] != null &&
+      (data['tracks'] as List).isNotEmpty) {
     String playName = data['title'].toString();
     while (playlistNames.contains(playName) || await Hive.boxExists(playName)) {
       // ignore: use_string_buffers
@@ -366,8 +357,8 @@ Future<void> importSpotifyViaLink(
     title: AppLocalizations.of(context)!.enterPlaylistLink,
     initialText: '',
     keyboardType: TextInputType.url,
-    onSubmitted: (String value, BuildContext context) async {
-      Navigator.pop(context);
+    onSubmitted: (String value, BuildContext ctxt) async {
+      Navigator.pop(ctxt);
       final String playlistId = value.split('?')[0].split('/').last;
       final playlistName = AppLocalizations.of(context)!.spotifyPublic;
       await importSpotify(
@@ -401,7 +392,7 @@ Future<void> importJioSaavn(
 
       if (data.isNotEmpty) {
         final String playName = data['title'].toString();
-        addPlaylist(playName, data['tracks'] as List);
+        await addPlaylist(playName, data['tracks'] as List);
         playlistNames.add(playName);
       } else {
         Logger.root.severe('Failed to import JioSaavn playlist. data is empty');

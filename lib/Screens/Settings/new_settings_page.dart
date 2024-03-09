@@ -168,7 +168,7 @@ class _NewSettingsPageState extends State<NewSettingsPage>
         'items': [
           AppLocalizations.of(context)!.playerScreenBackground,
           AppLocalizations.of(context)!.miniButtons,
-          // AppLocalizations.of(context)!.useDenseMini,
+          AppLocalizations.of(context)!.useDenseMini,
           AppLocalizations.of(context)!.blacklistedHomeSections,
           AppLocalizations.of(context)!.changeOrder,
           AppLocalizations.of(context)!.compactNotificationButtons,
@@ -176,6 +176,7 @@ class _NewSettingsPageState extends State<NewSettingsPage>
           AppLocalizations.of(context)!.showLast,
           AppLocalizations.of(context)!.navTabs,
           AppLocalizations.of(context)!.enableGesture,
+          AppLocalizations.of(context)!.volumeGestureEnabled,
           AppLocalizations.of(context)!.useLessDataImage,
         ],
       },

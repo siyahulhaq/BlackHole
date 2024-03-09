@@ -24,6 +24,8 @@ import 'package:audiotagger/models/tag.dart';
 import 'package:blackhole/CustomWidgets/snackbar.dart';
 import 'package:blackhole/Helpers/lyrics.dart';
 import 'package:blackhole/Services/ext_storage_provider.dart';
+import 'package:blackhole/Services/youtube_services.dart';
+// import 'package:ffmpeg_kit_flutter_audio/ffmpeg_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_downloader/flutter_downloader.dart';
@@ -34,6 +36,7 @@ import 'package:logging/logging.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 class Download with ChangeNotifier {
   static final Map<String, Download> _instances = {};
@@ -154,15 +157,12 @@ class Download with ChangeNotifier {
         switch (rememberOption) {
           case 0:
             lastDownloadId = data['id'].toString();
-            break;
           case 1:
             downloadSong(context, dlPath, filename, data);
-            break;
           case 2:
             while (await File('$dlPath/$filename').exists()) {
               filename = filename.replaceAll('.m4a', ' (1).m4a');
             }
-            break;
           default:
             lastDownloadId = data['id'].toString();
             break;
@@ -370,17 +370,7 @@ class Download with ChangeNotifier {
     }
     String kUrl = data['url'].toString();
 
-    if (data['url'].toString().contains('google')) {
-      Logger.root.info('Fetching youtube download url with preferred quality');
-      // filename = filename.replaceAll('.m4a', '.opus');
-
-      kUrl = preferredYtDownloadQuality == 'High'
-          ? data['highUrl'].toString()
-          : data['lowUrl'].toString();
-      if (kUrl == 'null') {
-        kUrl = data['url'].toString();
-      }
-    } else {
+    if (!data['url'].toString().contains('google')) {
       Logger.root.info('Fetching jiosaavn download url with preferred quality');
       kUrl = kUrl.replaceAll(
         '_96.',
@@ -388,22 +378,36 @@ class Download with ChangeNotifier {
       );
     }
 
-    Logger.root.info('Connecting to Client');
-    final client = Client();
-    final response = await client.send(Request('GET', Uri.parse(kUrl)));
-    final int total = response.contentLength ?? 0;
+    int total = 0;
     int recieved = 0;
+    Client? client;
+    Stream<List<int>> stream;
+    // Download from yt
+    if (data['url'].toString().contains('google')) {
+      // Use preferredYtDownloadQuality to check for quality first
+      final AudioOnlyStreamInfo streamInfo =
+          (await YouTubeServices.instance.getStreamInfo(data['id'].toString()))
+              .last;
+      total = streamInfo.size.totalBytes;
+      // Get the actual stream
+      stream = YouTubeServices.instance.getStreamClient(streamInfo);
+    } else {
+      Logger.root.info('Connecting to Client');
+      client = Client();
+      final response = await client.send(Request('GET', Uri.parse(kUrl)));
+      total = response.contentLength ?? 0;
+      stream = response.stream.asBroadcastStream();
+    }
     Logger.root.info('Client connected, Starting download');
-    response.stream.asBroadcastStream();
-    Logger.root.info('broadcasting download state');
-    response.stream.listen((value) {
+    stream.listen((value) {
       bytes.addAll(value);
       try {
         recieved += value.length;
         progress = recieved / total;
         notifyListeners();
-        if (!download) {
+        if (!download && client != null) {
           client.close();
+          // need to add for yt as well
         }
       } catch (e) {
         Logger.root.severe('Error in download: $e');
@@ -421,7 +425,7 @@ class Download with ChangeNotifier {
         final bytes2 = await consolidateHttpClientResponseBytes(response2);
         final File file2 = File(filepath2);
 
-        await file2.writeAsBytes(bytes2);
+        file2.writeAsBytesSync(bytes2);
         try {
           Logger.root.info('Checking if lyrics required');
           if (downloadLyrics) {
@@ -455,7 +459,7 @@ class Download with ChangeNotifier {
         //       'libmp3lame',
         //       '-b:a',
         //       '320k',
-        //       (filepath!.replaceAll('.m4a', '.mp3'))
+        //       filepath!.replaceAll('.m4a', '.mp3'),
         //     ];
         //   }
         //   if (downloadFormat == 'm4a') {
@@ -467,12 +471,16 @@ class Download with ChangeNotifier {
         //       'aac',
         //       '-b:a',
         //       '320k',
-        //       filepath!.replaceAll('.m4a', '.m4a')
+        //       filepath!.replaceAll('.m4a', '.m4a'),
         //     ];
         //   }
-        //   // await FlutterFFmpeg().executeWithArguments(_argsList);
-        //   // await File(filepath!).delete();
-        //   // filepath = filepath!.replaceAll('.m4a', '.$downloadFormat');
+        //   if (argsList != null) {
+        //     Logger.root.info('Converting audio to $downloadFormat');
+        //     await FFmpegKit.executeWithArguments(argsList);
+        //     Logger.root.info('Conversion complete, deleting old file');
+        //     await File(filepath!).delete();
+        //     filepath = filepath!.replaceAll('.m4a', '.$downloadFormat');
+        //   }
         // }
         Logger.root.info('Getting audio tags');
         if (Platform.isAndroid) {
@@ -506,31 +514,37 @@ class Download with ChangeNotifier {
           }
         } else {
           // Set metadata to file
-          await MetadataGod.writeMetadata(
-            file: filepath!,
-            metadata: Metadata(
-              title: data['title'].toString(),
-              artist: data['artist'].toString(),
-              albumArtist: data['album_artist']?.toString() ??
-                  data['artist']?.toString().split(', ')[0] ??
-                  '',
-              album: data['album'].toString(),
-              genre: data['language'].toString(),
-              year: int.parse(data['year'].toString()),
-              // lyrics: lyrics,
-              // comment: 'BlackHole',
-              // trackNumber: 1,
-              // trackTotal: 12,
-              // discNumber: 1,
-              // discTotal: 5,
-              durationMs: int.parse(data['duration'].toString()) * 1000,
-              fileSize: file.lengthSync(),
-              picture: Picture(
-                data: File(filepath2).readAsBytesSync(),
-                mimeType: 'image/jpeg',
+          if (data['language'].toString() == 'YouTube') {
+            Logger.root.info('Started tag editing');
+            // skipping metadata for saavn for the time being as it corrupts the file
+            await MetadataGod.writeMetadata(
+              file: filepath!,
+              metadata: Metadata(
+                title: data['title'].toString(),
+                artist: data['artist'].toString(),
+                albumArtist: data['album_artist']?.toString() ??
+                    data['artist']?.toString().split(', ')[0] ??
+                    '',
+                album: data['album'].toString(),
+                genre: data['language'].toString(),
+                year: ['', 'null'].contains(data['year'].toString())
+                    ? null
+                    : int.parse(data['year'].toString()),
+                // lyrics: lyrics,
+                // comment: 'BlackHole',
+                // trackNumber: 1,
+                // trackTotal: 12,
+                // discNumber: 1,
+                // discTotal: 5,
+                durationMs: int.parse(data['duration'].toString()) * 1000,
+                fileSize: file.lengthSync(),
+                picture: Picture(
+                  data: bytes2,
+                  mimeType: 'image/jpeg',
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
         Logger.root.info('Closing connection & notifying listeners');
         client.close();

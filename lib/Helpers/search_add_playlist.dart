@@ -25,6 +25,7 @@ import 'package:blackhole/CustomWidgets/gradient_containers.dart';
 import 'package:blackhole/Helpers/matcher.dart';
 import 'package:blackhole/Helpers/playlist.dart';
 import 'package:blackhole/Services/youtube_services.dart';
+import 'package:blackhole/Services/yt_music.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart';
@@ -38,18 +39,8 @@ class SearchAddPlaylist {
     try {
       final RegExpMatch? id = RegExp(r'.*list\=(.*?)&').firstMatch(link);
       if (id != null) {
-        final Playlist metadata =
-            await YouTubeServices().getPlaylistDetails(id[1]!);
-        final List<Video> tracks =
-            await YouTubeServices().getPlaylistSongs(id[1]!);
-        return {
-          'title': metadata.title,
-          'image': metadata.thumbnails.standardResUrl,
-          'author': metadata.author,
-          'description': metadata.description,
-          'tracks': tracks,
-          'count': tracks.length,
-        };
+        final Map metadata = await YtMusicService().getPlaylistDetails(id[1]!);
+        return metadata;
       }
       return {};
     } catch (e) {
@@ -132,8 +123,8 @@ class SearchAddPlaylist {
             await SaavnAPI().getSongFromToken(id, 'playlist', n: -1);
         return {
           'title': data['title'],
-          'count': data['list'].length,
-          'tracks': data['list'],
+          'count': data['songs'].length,
+          'tracks': data['songs'],
         };
       }
       return {};
@@ -168,6 +159,18 @@ class SearchAddPlaylist {
         );
         if (index != -1) {
           addMapToPlaylist(playName, result[index] as Map);
+        } else {
+          YouTubeServices.instance
+              .formatVideo(
+            video: track as Video,
+            getUrl: false,
+            quality: 'low',
+          )
+              .then((songMap) {
+            if (songMap != null) {
+              addMapToPlaylist(playName, songMap);
+            }
+          });
         }
       } catch (e) {
         Logger.root.severe('Error in $done: $e');
@@ -269,7 +272,7 @@ class SearchAddPlaylist {
                   width: 300,
                   child: StreamBuilder<Object>(
                     stream: songAdd as Stream<Object>?,
-                    builder: (ctxt, AsyncSnapshot snapshot) {
+                    builder: (BuildContext ctxt, AsyncSnapshot snapshot) {
                       final Map? data = snapshot.data as Map?;
                       final int done = (data ?? const {})['done'] as int? ?? 0;
                       final String name =
@@ -286,8 +289,8 @@ class SearchAddPlaylist {
                             ),
                           ),
                           SizedBox(
-                            height: 80,
-                            width: 80,
+                            height: 90,
+                            width: 90,
                             child: Stack(
                               children: [
                                 Center(
@@ -295,8 +298,8 @@ class SearchAddPlaylist {
                                 ),
                                 Center(
                                   child: SizedBox(
-                                    height: 77,
-                                    width: 77,
+                                    height: 85,
+                                    width: 85,
                                     child: CircularProgressIndicator(
                                       valueColor: AlwaysStoppedAnimation<Color>(
                                         Theme.of(ctxt).colorScheme.secondary,
@@ -310,7 +313,9 @@ class SearchAddPlaylist {
                           ),
                           Center(
                             child: Text(
-                              name,
+                              '$name\n',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
                             ),
                           ),
